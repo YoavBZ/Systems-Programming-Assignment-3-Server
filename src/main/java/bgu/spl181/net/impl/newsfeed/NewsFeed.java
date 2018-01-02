@@ -13,7 +13,7 @@ public class NewsFeed {
 		if (queue == null) {
 			return new ArrayList<>(0); //empty
 		} else {
-			return new ArrayList<>(queue); //copy of the queue, arraylist is serializable
+			return new ArrayList<>(queue); //copy of the queue, ArrayList is serializable
 		}
 	}
 
