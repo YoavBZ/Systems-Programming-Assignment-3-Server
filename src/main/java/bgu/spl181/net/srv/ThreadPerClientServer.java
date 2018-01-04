@@ -1,25 +1,26 @@
 package bgu.spl181.net.srv;
 
 import bgu.spl181.net.api.MessageEncoderDecoder;
-import bgu.spl181.net.api.MessagingProtocol;
+import bgu.spl181.net.api.bidi.BidiMessagingProtocol;
+import bgu.spl181.net.impl.ConnectionsImpl;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.function.Supplier;
 
-public abstract class BaseServer<T> implements Server<T> {
+public class ThreadPerClientServer<T> implements Server {
 
 	private final int port;
-	private final Supplier<MessagingProtocol<T>> protocolFactory;
+	private final Supplier<BidiMessagingProtocol<T>> protocolFactory;
 	private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
 	private ServerSocket sock;
+	private ConnectionsImpl<T, BlockingConnectionHandler<T>> connections = new ConnectionsImpl<>();
 
-	public BaseServer(
+	public ThreadPerClientServer(
 			int port,
-			Supplier<MessagingProtocol<T>> protocolFactory,
+			Supplier<BidiMessagingProtocol<T>> protocolFactory,
 			Supplier<MessageEncoderDecoder<T>> encdecFactory) {
-
 		this.port = port;
 		this.protocolFactory = protocolFactory;
 		this.encdecFactory = encdecFactory;
@@ -38,14 +39,15 @@ public abstract class BaseServer<T> implements Server<T> {
 
 				Socket clientSock = serverSock.accept();
 
+				BidiMessagingProtocol<T> protocol = protocolFactory.get();
 				BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
 						clientSock,
 						encdecFactory.get(),
-						protocolFactory.get());
-
+						protocol);
+				protocol.start(connections.addConnection(handler), connections);
 				execute(handler);
 			}
-		} catch (IOException ex) {
+		} catch (IOException ignored) {
 		}
 
 		System.out.println("server closed!!!");
@@ -57,6 +59,7 @@ public abstract class BaseServer<T> implements Server<T> {
 			sock.close();
 	}
 
-	protected abstract void execute(BlockingConnectionHandler<T> handler);
-
+	private void execute(BlockingConnectionHandler<T> handler) {
+		new Thread(handler).start();
+	}
 }

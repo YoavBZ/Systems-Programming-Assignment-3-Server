@@ -1,7 +1,7 @@
 package bgu.spl181.net.srv;
 
 import bgu.spl181.net.api.MessageEncoderDecoder;
-import bgu.spl181.net.api.MessagingProtocol;
+import bgu.spl181.net.api.bidi.BidiMessagingProtocol;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -9,10 +9,10 @@ import java.nio.channels.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
-public class Reactor<T> implements Server<T> {
+public class ReactorServer<T> implements Server {
 
 	private final int port;
-	private final Supplier<MessagingProtocol<T>> protocolFactory;
+	private final Supplier<BidiMessagingProtocol<T>> protocolFactory;
 	private final Supplier<MessageEncoderDecoder<T>> readerFactory;
 	private final ActorThreadPool pool;
 	private Selector selector;
@@ -20,10 +20,10 @@ public class Reactor<T> implements Server<T> {
 	private Thread selectorThread;
 	private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
 
-	public Reactor(
+	public ReactorServer(
 			int numThreads,
 			int port,
-			Supplier<MessagingProtocol<T>> protocolFactory,
+			Supplier<BidiMessagingProtocol<T>> protocolFactory,
 			Supplier<MessageEncoderDecoder<T>> readerFactory) {
 
 		this.pool = new ActorThreadPool(numThreads);
@@ -51,7 +51,6 @@ public class Reactor<T> implements Server<T> {
 				runSelectionThreadTasks();
 
 				for (SelectionKey key : selector.selectedKeys()) {
-
 					if (!key.isValid()) {
 						continue;
 					} else if (key.isAcceptable()) {
@@ -60,9 +59,7 @@ public class Reactor<T> implements Server<T> {
 						handleReadWrite(key);
 					}
 				}
-
 				selector.selectedKeys().clear(); //clear the selected keys set so that we can know about new events
-
 			}
 
 		} catch (ClosedSelectorException ex) {
@@ -88,11 +85,10 @@ public class Reactor<T> implements Server<T> {
 		}
 	}
 
-
 	private void handleAccept(ServerSocketChannel serverChan, Selector selector) throws IOException {
 		SocketChannel clientChan = serverChan.accept();
 		clientChan.configureBlocking(false);
-		final NonBlockingConnectionHandler handler = new NonBlockingConnectionHandler(
+		final NonBlockingConnectionHandler handler = new NonBlockingConnectionHandler<>(
 				readerFactory.get(),
 				protocolFactory.get(),
 				clientChan,
@@ -125,5 +121,4 @@ public class Reactor<T> implements Server<T> {
 	public void close() throws IOException {
 		selector.close();
 	}
-
 }

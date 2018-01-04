@@ -1,4 +1,4 @@
-package bgu.spl181.net.impl.rci;
+package bgu.spl181.net.implOld.rci;
 
 import bgu.spl181.net.api.MessageEncoderDecoder;
 

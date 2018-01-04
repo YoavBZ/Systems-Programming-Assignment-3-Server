@@ -1,4 +1,4 @@
-package bgu.spl181.net.impl.echo;
+package bgu.spl181.net.implOld.echo;
 
 import bgu.spl181.net.api.MessageEncoderDecoder;
 

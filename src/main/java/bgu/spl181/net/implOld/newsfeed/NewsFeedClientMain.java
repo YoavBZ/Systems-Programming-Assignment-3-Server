@@ -1,6 +1,6 @@
-package bgu.spl181.net.impl.newsfeed;
+package bgu.spl181.net.implOld.newsfeed;
 
-import bgu.spl181.net.impl.rci.RCIClient;
+import bgu.spl181.net.implOld.rci.RCIClient;
 
 public class NewsFeedClientMain {
 
@@ -9,7 +9,7 @@ public class NewsFeedClientMain {
 			args = new String[]{"127.0.0.1"};
 		}
 
-//        System.out.println("running clients");
+		System.out.println("running clients");
 		runFirstClient(args[0]);
 		runSecondClient(args[0]);
 		runThirdClient(args[0]);
@@ -35,7 +35,6 @@ public class NewsFeedClientMain {
 
 			c.receive(); //ok
 		}
-
 	}
 
 	private static void runSecondClient(String host) throws Exception {
