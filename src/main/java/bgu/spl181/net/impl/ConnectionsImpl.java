@@ -7,17 +7,18 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ConnectionsImpl<T, R extends ConnectionHandler<T>> implements Connections<T> {
+public class ConnectionsImpl<T> implements Connections<T> {
 
 	private AtomicInteger idGenerator = new AtomicInteger();
-	private HashMap<Integer, R> activeConnections = new HashMap<>();
+	private HashMap<Integer, ConnectionHandler<T>> activeConnections = new HashMap<>();
 
 	/**
 	 * Adds a given handler the the {@link ConnectionsImpl#activeConnections} with a new unique id
 	 *
 	 * @param handler An already initiated {@link ConnectionHandler<T>}
 	 */
-	public int addConnection(R handler) {
+	@Override
+	public int addConnection(ConnectionHandler<T> handler) {
 		int id = idGenerator.incrementAndGet();
 		activeConnections.put(id, handler);
 		return id;
@@ -33,7 +34,7 @@ public class ConnectionsImpl<T, R extends ConnectionHandler<T>> implements Conne
 	 */
 	@Override
 	public boolean send(int connectionId, T msg) {
-		R handler = activeConnections.get(connectionId);
+		ConnectionHandler<T> handler = activeConnections.get(connectionId);
 		if (handler != null) {
 			handler.send(msg);
 			return true;
@@ -49,7 +50,7 @@ public class ConnectionsImpl<T, R extends ConnectionHandler<T>> implements Conne
 	 */
 	@Override
 	public void broadcast(T msg) {
-		for (R connectionHandler : activeConnections.values()) {
+		for (ConnectionHandler<T> connectionHandler : activeConnections.values()) {
 			connectionHandler.send(msg);
 		}
 	}
@@ -61,7 +62,7 @@ public class ConnectionsImpl<T, R extends ConnectionHandler<T>> implements Conne
 	 */
 	@Override
 	public void disconnect(int connectionId) throws IOException {
-		R handler = activeConnections.remove(connectionId);
+		ConnectionHandler<T> handler = activeConnections.remove(connectionId);
 		if (handler != null)
 			handler.close();
 	}

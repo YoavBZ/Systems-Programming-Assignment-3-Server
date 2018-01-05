@@ -1,5 +1,7 @@
 package bgu.spl181.net.api.bidi;
 
+import bgu.spl181.net.srv.bidi.ConnectionHandler;
+
 import java.io.IOException;
 
 public interface Connections<T> {
@@ -9,4 +11,6 @@ public interface Connections<T> {
 	void broadcast(T msg);
 
 	void disconnect(int connectionId) throws IOException;
+
+	int addConnection(ConnectionHandler<T> handler);
 }

@@ -2,20 +2,21 @@ package bgu.spl181.net.impl;
 
 import bgu.spl181.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl181.net.api.bidi.Connections;
-import bgu.spl181.net.srv.bidi.ConnectionHandler;
+import com.sun.deploy.util.ArgumentParsingUtil;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-public abstract class UserServiceProtocol<R extends ConnectionHandler<String>> implements BidiMessagingProtocol<String> {
+public abstract class UserServiceProtocol implements BidiMessagingProtocol<String> {
 
-	private int connectionId;
-	private ConnectionsImpl<String, R> connections;
-	private boolean shouldTerminate = false;
+	protected int connectionId;
+	protected Connections<String> connections;
+	protected boolean shouldTerminate = false;
 
 	@Override
 	public void start(int connectionId, Connections<String> connections) {
 		this.connectionId = connectionId;
-		this.connections = (ConnectionsImpl<String, R>) connections;
+		this.connections = connections;
 	}
 
 	/**
@@ -25,30 +26,46 @@ public abstract class UserServiceProtocol<R extends ConnectionHandler<String>> i
 	 */
 	@Override
 	public void process(String msg) {
-		String[] args = msg.split(" ");
-		switch (args[0]) {
+		List<String> args = ArgumentParsingUtil.parseCommandLine(msg);
+		switch (args.get(0)) {
 			case "REGISTER":
+				try {
+					// TODO: Process registration
+					break;
+				} catch (Exception e) {
+					connections.send(connectionId, "ERROR registration failed");
+				}
+				connections.send(connectionId, "ACK registration succeeded");
 				break;
 			case "LOGIN":
+				try {
+					// TODO: Process login
+					break;
+				} catch (Exception e) {
+					connections.send(connectionId, "ERROR login failed");
+				}
+				connections.send(connectionId, "ACK login succeeded");
 				break;
 			case "SIGNOUT":
+				try {
+					// TODO: Process signout
+					break;
+				} catch (Exception e) {
+					connections.send(connectionId, "ERROR signout failed");
+				}
+				connections.send(connectionId, "ACK signout succeeded");
 				break;
 			case "REQUEST":
-				handleRequest(args[1]);
-				break;
+				try {
+					handleRequest(args);
+				} catch (Exception e) {
+					connections.send(connectionId, "ERROR request " + args.get(1) + " failed");
+				}
 		}
-
-		shouldTerminate = "bye".equals(msg);
 		System.out.println("[" + LocalDateTime.now() + "]: " + msg);
-		createEcho(msg);
 	}
 
-	private abstract void handleRequest(String arg);
-
-	private String createEcho(String message) {
-		String echoPart = message.substring(Math.max(message.length() - 2, 0), message.length());
-		return message + " .. " + echoPart + " .. " + echoPart + " ..";
-	}
+	abstract void handleRequest(List<String> arg);
 
 	@Override
 	public boolean shouldTerminate() {

@@ -15,7 +15,7 @@ public class ThreadPerClientServer<T> implements Server {
 	private final Supplier<BidiMessagingProtocol<T>> protocolFactory;
 	private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
 	private ServerSocket sock;
-	private ConnectionsImpl<T, BlockingConnectionHandler<T>> connections = new ConnectionsImpl<>();
+	private ConnectionsImpl<T> connections = new ConnectionsImpl<>();
 
 	public ThreadPerClientServer(
 			int port,

@@ -2,6 +2,7 @@ package bgu.spl181.net.srv;
 
 import bgu.spl181.net.api.MessageEncoderDecoder;
 import bgu.spl181.net.api.bidi.BidiMessagingProtocol;
+import bgu.spl181.net.impl.ConnectionsImpl;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,6 +20,8 @@ public class ReactorServer<T> implements Server {
 
 	private Thread selectorThread;
 	private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
+
+	private ConnectionsImpl<T> connections = new ConnectionsImpl<>();
 
 	public ReactorServer(
 			int numThreads,
@@ -88,11 +91,13 @@ public class ReactorServer<T> implements Server {
 	private void handleAccept(ServerSocketChannel serverChan, Selector selector) throws IOException {
 		SocketChannel clientChan = serverChan.accept();
 		clientChan.configureBlocking(false);
-		final NonBlockingConnectionHandler handler = new NonBlockingConnectionHandler<>(
+		BidiMessagingProtocol<T> protocol = protocolFactory.get();
+		final NonBlockingConnectionHandler<T> handler = new NonBlockingConnectionHandler<>(
 				readerFactory.get(),
-				protocolFactory.get(),
+				protocol,
 				clientChan,
 				this);
+		protocol.start(connections.addConnection(handler), connections);
 		clientChan.register(selector, SelectionKey.OP_READ, handler);
 	}
 
