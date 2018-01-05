@@ -1,23 +1,19 @@
 package bgu.spl181.net.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class User {
 
 	private String userName;
 	private String password;
-	private int balance = 0;
-	private String country;
 	private boolean admin;
-	private List<String> rentedMovies = new ArrayList<>();
+	private int balance;
+	private String[] data;
 
-	public User(String userName, String password, int balance, String country, boolean admin) {
+	public User(String userName, String password, boolean admin, int balance, String... data) {
 		this.userName = userName;
 		this.password = password;
-		this.balance = balance;
-		this.country = country;
 		this.admin = admin;
+		this.balance = balance;
+		this.data = data;
 	}
 
 	public String getUserName() {
@@ -40,15 +36,11 @@ public class User {
 		this.balance -= amount;
 	}
 
-	public String getCountry() {
-		return country;
-	}
-
 	public boolean isAdmin() {
 		return admin;
 	}
 
-	public List<String> getRentedMovies() {
-		return rentedMovies;
+	public String[] getData() {
+		return data;
 	}
 }

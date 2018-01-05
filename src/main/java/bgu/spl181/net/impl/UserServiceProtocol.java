@@ -5,13 +5,17 @@ import bgu.spl181.net.api.bidi.Connections;
 import com.sun.deploy.util.ArgumentParsingUtil;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class UserServiceProtocol implements BidiMessagingProtocol<String> {
 
-	protected int connectionId;
-	protected Connections<String> connections;
-	protected boolean shouldTerminate = false;
+	int connectionId;
+	Connections<String> connections;
+	Map<Integer, User> users = new HashMap<>();
+	Map<Integer, User> loggedUsers = new HashMap<>();
+	private boolean shouldTerminate = false;
 
 	@Override
 	public void start(int connectionId, Connections<String> connections) {
@@ -30,45 +34,61 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 		switch (args.get(0)) {
 			case "REGISTER":
 				try {
-					// TODO: Process registration
-					break;
+					handleRegister(args);
 				} catch (Exception e) {
-					connections.send(connectionId, "ERROR registration failed");
+					connections.send(connectionId, error("registration"));
 				}
-				connections.send(connectionId, "ACK registration succeeded");
 				break;
 			case "LOGIN":
 				try {
-					// TODO: Process login
-					break;
+					User user = users.get(connectionId);
+					if (!loggedUsers.containsKey(connectionId) && args.get(1).equals(user.getUserName()) && args.get(2).equals(user.getPassword())) {
+						loggedUsers.put(connectionId, users.get(connectionId));
+						connections.send(connectionId, ack("login"));
+					}
 				} catch (Exception e) {
-					connections.send(connectionId, "ERROR login failed");
+					connections.send(connectionId, error("login"));
 				}
-				connections.send(connectionId, "ACK login succeeded");
 				break;
 			case "SIGNOUT":
 				try {
-					// TODO: Process signout
-					break;
+					if (loggedUsers.remove(connectionId) != null)
+						connections.send(connectionId, ack("signout"));
 				} catch (Exception e) {
-					connections.send(connectionId, "ERROR signout failed");
+					connections.send(connectionId, error("signout"));
 				}
-				connections.send(connectionId, "ACK signout succeeded");
 				break;
 			case "REQUEST":
 				try {
 					handleRequest(args);
 				} catch (Exception e) {
-					connections.send(connectionId, "ERROR request " + args.get(1) + " failed");
+					connections.send(connectionId, error("request " + args.get(2)));
 				}
 		}
 		System.out.println("[" + LocalDateTime.now() + "]: " + msg);
 	}
 
-	abstract void handleRequest(List<String> arg);
+	abstract void handleRequest(List<String> arg) throws Exception;
+
+	protected void handleRegister(List<String> args) throws Exception {
+		if (!users.containsKey(connectionId)) {
+			handleRequest(args);
+			connections.send(connectionId, ack("registration"));
+			return;
+		}
+		throw new UnsupportedOperationException("Got an unsupported request.");
+	}
 
 	@Override
 	public boolean shouldTerminate() {
 		return shouldTerminate;
+	}
+
+	String ack(String response) {
+		return "ACK " + response + " succeeded";
+	}
+
+	private String error(String response) {
+		return "ERROR " + response + " failed";
 	}
 }
