@@ -1,112 +1,118 @@
 package bgu.spl181.net.impl;
 
+import bgu.spl181.net.impl.data.Movie;
+import bgu.spl181.net.impl.data.MovieRentalSharedData;
+import bgu.spl181.net.impl.data.SharedData;
+import bgu.spl181.net.impl.data.User;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class MovieRentalProtocol extends UserServiceProtocol {
 
-	private Map<String, Movie> movies;
-	private Map<User, List<String>> rentedMovies;
-
-	public MovieRentalProtocol(Map<String, Movie> movies) {
-		this.movies = movies;
-	}
-
-	/**
-	 * This method handles the commands related to the Movie Rental Service
-	 *
-	 * @param args Original command arguments
-	 */
-	@Override
-	void handleRequest(List<String> args) {
-		if (args.get(0).equals("REGISTER")) {
-			// Handling registration
-			handleRegister(args);
-		} else {
-			// Handling request
-			handleRequestCommand(args);
-		}
+	public MovieRentalProtocol(SharedData sharedData, Map<String, Movie> movies) {
+		super(sharedData);
 	}
 
 	@Override
-	protected void handleRegister(List<String> args) {
-		String[] data = null;
-		if (args.size() >= 4) {
-			data = Arrays.copyOfRange(((String[]) args.toArray()), 4, args.size());
-		}
-		User user = new User(args.get(1), args.get(2), false, 0, data);
-		users.put(connectionId, user);
+	protected void processRegistration(String[] args) {
+		if (!((MovieRentalSharedData) sharedData).getUsers().hasUser(args[1]) &&
+				args[3].startsWith("country=") && args.length == 4) {
+			User user = new User(args[1], args[2], args[3].substring(8));
+			((MovieRentalSharedData) sharedData).getUsers().addUser(user);
+			connections.send(connectionId, ack("registration"));
+		} else
+			throw new UnsupportedOperationException();
 	}
 
-	private void handleRequestCommand(List<String> args) {
-		User user = users.get(connectionId);
+	@Override
+	protected void processRequest(String[] args) {
+		String userName = sharedData.getUserName(connectionId);
+		User user = ((MovieRentalSharedData) sharedData).getUsers().getUser(userName);
 		Movie movie;
-		switch (args.get(1)) {
+		switch (args[1]) {
 			// Handling request
 			case "balance":
-				if (args.get(2).equals("info")) {
+				if (args[2].equals("info")) {
+					sharedData.getLock().readLock().lock();
 					connections.send(connectionId, ack("balance " + user.getBalance()));
 					return;
-				} else if (args.get(2).equals("add")) {
-					user.incBalance(Integer.parseInt(args.get(3)));
-					connections.send(connectionId, ack("balance " + user.getBalance() + " added " + args.get(3)));
+				} else if (args[2].equals("add")) {
+					sharedData.getLock().writeLock().lock();
+					user.incBalance(Integer.parseInt(args[3]));
+					connections.send(connectionId, ack("balance " + user.getBalance() + " added " + args[3]));
 					return;
 				}
 				break;
-			case "info": {
-				if (args.size() == 2) {
-					connections.send(connectionId, ack("info " + String.join(",", movies.keySet())));
+			case "info":
+				sharedData.getLock().readLock().lock();
+				if (args.length == 2) {
+					connections.send(connectionId, ack("info " + ((MovieRentalSharedData) sharedData).getMovies().getNames()));
 					return;
 				} else {
-					movie = movies.get(args.get(2));
+					movie = ((MovieRentalSharedData) sharedData).getMovies().getMovie(args[2]);
 					connections.send(connectionId, ack("info " + movie));
 					return;
 				}
-			}
 			case "rent":
-				movie = movies.get(args.get(2));
-				rentedMovies.get(user).add(movie.getName());
-				user.decBalance(movie.getPrice());
-				movie.decCopiesLeft();
-				connections.send(connectionId, ack("rent " + movie.getName() + " success"));
-				connections.broadcast("movie " + movie.getName() + " " + movie.getCopiesLeft() + " " + movie.getPrice());
-				return;
+				sharedData.getLock().writeLock().lock();
+				movie = ((MovieRentalSharedData) sharedData).getMovies().getMovie(args[2]);
+				if (user.getBalance() >= movie.getPrice() && !user.isRented(args[2]) &&
+						movie.getAvailableAmount() > 0 && !movie.getBannedCountries().contains(user.getCountry())) {
+					user.rentMovie(movie);
+					user.decBalance(movie.getPrice());
+					movie.decAvailableAmount();
+					connections.send(connectionId, ack("rent " + movie.getQuotedName() + " success"));
+					connections.broadcast("movie " + movie.getQuotedName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
+					return;
+				}
+				break;
 			case "return":
-				movie = movies.get(args.get(2));
-				if (rentedMovies.get(user).remove(movie.getName())) {
-					movie.incCopiesLeft();
-					connections.send(connectionId, ack("return " + movie.getName() + " success"));
-					connections.broadcast("movie " + movie.getName() + " " + movie.getCopiesLeft() + " " + movie.getPrice());
+				sharedData.getLock().writeLock().lock();
+				movie = ((MovieRentalSharedData) sharedData).getMovies().getMovie(args[2]);
+				if (user.isRented(args[2])) {
+					user.returnMovie(movie);
+					movie.incAvailableAmount();
+					connections.send(connectionId, ack("return " + movie.getQuotedName() + " success"));
+					connections.broadcast("movie " + movie.getQuotedName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
 					return;
 				}
-				// Admin commands
+				break;
+			// Admin commands
 			case "addmovie":
-				if (user.isAdmin()) {
-					movie = new Movie(args.get(2), Integer.valueOf(args.get(3)), Integer.valueOf(args.get(4)), new ArrayList<>());
-					movies.put(movie.getName(), movie);
-					connections.send(connectionId, ack("addmovie " + movie.getName() + " success"));
-					connections.broadcast("movie " + movie.getName() + " " + movie.getCopiesLeft() + " " + movie.getPrice());
+				sharedData.getLock().writeLock().lock();
+				if (user.isAdmin() && ((MovieRentalSharedData) sharedData).getMovies().getMovie(args[2]) == null &&
+						Integer.parseInt(args[3]) > 0 && Integer.parseInt(args[4]) > 0) {
+					String movieId = String.valueOf(((MovieRentalSharedData) sharedData).getMaxMovieId().incrementAndGet());
+					movie = new Movie(movieId, args[2], args[3], args[4], new ArrayList<>());
+					((MovieRentalSharedData) sharedData).getMovies().addMovie(movie);
+					connections.send(connectionId, ack("addmovie " + movie.getQuotedName() + " success"));
+					connections.broadcast("movie " + movie.getName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
 					return;
 				}
+				break;
 			case "remmovie":
+				sharedData.getLock().writeLock().lock();
 				if (user.isAdmin()) {
-					String name = args.get(2);
-					movies.remove(name);
-					connections.send(connectionId, ack("remmovie " + name + " success"));
-					connections.broadcast("movie " + name + " removed");
-					return;
+					movie = ((MovieRentalSharedData) sharedData).getMovies().getMovie(args[2]);
+					if (movie.getAvailableAmount() == movie.getTotalAmount()) {
+						((MovieRentalSharedData) sharedData).getMovies().removeMovie(movie);
+						connections.send(connectionId, ack("remmovie " + movie.getQuotedName() + " success"));
+						connections.broadcast("movie " + movie.getQuotedName() + " removed");
+						return;
+					}
 				}
+				break;
 			case "changeprice":
-				if (user.isAdmin()) {
-					movie = movies.get(args.get(2));
-					movie.setPrice(Integer.parseInt(args.get(3)));
+				sharedData.getLock().writeLock().lock();
+				if (user.isAdmin() && Integer.parseInt(args[3]) > 0) {
+					movie = ((MovieRentalSharedData) sharedData).getMovies().getMovie(args[2]);
+					movie.setPrice(Integer.parseInt(args[3]));
 					connections.send(connectionId, ack("changeprice " + movie.getName() + " success"));
-					connections.broadcast("movie " + movie.getName() + " " + movie.getCopiesLeft() + " " + movie.getPrice());
+					connections.broadcast("movie " + movie.getName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
 					return;
 				}
 		}
-		throw new UnsupportedOperationException("Got an unsupported request.");
+		throw new UnsupportedOperationException();
 	}
 }
