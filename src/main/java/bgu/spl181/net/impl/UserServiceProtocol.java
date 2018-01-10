@@ -33,7 +33,7 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 	 */
 	@Override
 	public void process(String msg) {
-		String regex = "(\\w+=\"[^\"]*\")|\"([^\"]*)\"|(\\S+)";
+		String regex = "(?:\\w+=\"([^\"]*)\")|\"Up([^\"]*)\"|(\\S+)";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(msg);
 		List<String> args = new ArrayList<>();
