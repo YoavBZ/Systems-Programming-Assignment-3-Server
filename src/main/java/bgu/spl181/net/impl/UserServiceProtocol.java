@@ -2,9 +2,11 @@ package bgu.spl181.net.impl;
 
 import bgu.spl181.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl181.net.api.bidi.Connections;
-import bgu.spl181.net.impl.data.SharedData;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class UserServiceProtocol implements BidiMessagingProtocol<String> {
@@ -33,35 +35,39 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 	public void process(String msg) {
 		String regex = "(\\w+=\"[^\"]*\")|\"([^\"]*)\"|(\\S+)";
 		Pattern pattern = Pattern.compile(regex);
-		String[] args = pattern.split(msg);
-		switch (args[0]) {
+		Matcher matcher = pattern.matcher(msg);
+		List<String> args = new ArrayList<>();
+		while (matcher.find()) {
+			args.add(matcher.group());
+		}
+		switch (args.get(0)) {
 			case "REGISTER":
 				try {
-					sharedData.getLock().writeLock().lock();
+					sharedData.getUsersLock().writeLock().lock();
 					processRegistration(args);
 				} catch (Exception e) {
 					connections.send(connectionId, error("registration"));
 				} finally {
-					sharedData.getLock().writeLock().unlock();
+					sharedData.getUsersLock().writeLock().unlock();
 				}
 				break;
 			case "LOGIN":
 				try {
-					sharedData.getLock().writeLock().lock();
-					if (sharedData.getRegisteredUsers().get(args[1]).equals(args[2]) && !sharedData.getLoggedUsers().containsValue(args[1])) {
-						sharedData.getLoggedUsers().put(connectionId, args[1]);
+					sharedData.getLoggedUsersLock().writeLock().lock();
+					if (sharedData.getPassword(args.get(1)).equals(args.get(2)) && !sharedData.getLoggedUsers().containsValue(args.get(1))) {
+						sharedData.getLoggedUsers().put(connectionId, args.get(1));
 						connections.send(connectionId, ack("login"));
 					} else
 						throw new UnsupportedOperationException("LOGIN failed");
 				} catch (Exception e) {
 					connections.send(connectionId, error("login"));
 				} finally {
-					sharedData.getLock().writeLock().unlock();
+					sharedData.getLoggedUsersLock().writeLock().unlock();
 				}
 				break;
 			case "SIGNOUT":
 				try {
-					sharedData.getLock().writeLock().lock();
+					sharedData.getLoggedUsersLock().writeLock().lock();
 					if (sharedData.getLoggedUsers().remove(connectionId) != null) {
 						connections.send(connectionId, ack("signout"));
 						shouldTerminate = true;
@@ -70,25 +76,28 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 				} catch (Exception e) {
 					connections.send(connectionId, error("signout"));
 				} finally {
-					sharedData.getLock().writeLock().unlock();
+					sharedData.getLoggedUsersLock().writeLock().unlock();
 				}
 				break;
 			case "REQUEST":
 				try {
 					processRequest(args);
 				} catch (Exception e) {
-					connections.send(connectionId, error("request " + args[1]));
-				} finally {
-					sharedData.getLock().readLock().unlock();
-					sharedData.getLock().writeLock().unlock();
+					connections.send(connectionId, error("request " + args.get(1)));
 				}
 		}
 		System.out.println("[" + LocalDateTime.now() + "]: " + msg);
 	}
 
-	protected abstract void processRequest(String[] args) throws Exception;
+	void broadcastToLoggedUsers(String msg) {
+		for (Integer connectionId : sharedData.getLoggedUsers().keySet()) {
+			connections.send(connectionId, msg);
+		}
+	}
 
-	protected abstract void processRegistration(String[] args) throws Exception;
+	protected abstract void processRequest(List<String> args) throws Exception;
+
+	protected abstract void processRegistration(List<String> args) throws Exception;
 
 	@Override
 	public boolean shouldTerminate() {

@@ -44,7 +44,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
 	/**
 	 * Sends a message T to all active clients.
-	 * This includes clients that has not yet completed log-in by the User service text based protocol
+	 * This includes clients that has not yet completed log-in by the MovieUser service text based protocol
 	 *
 	 * @param msg The message to be sent
 	 */

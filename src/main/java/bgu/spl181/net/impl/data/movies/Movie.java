@@ -1,14 +1,11 @@
-package bgu.spl181.net.impl.data;
+package bgu.spl181.net.impl.data.movies;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Movie {
-
-	private static AtomicInteger idGenerator = new AtomicInteger();
 
 	@SerializedName("id")
 	@Expose
@@ -41,20 +38,12 @@ public class Movie {
 		return Integer.parseInt(id);
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
 	public String getName() {
 		return name;
 	}
 
 	public String getQuotedName() {
 		return '"' + name + '"';
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public int getPrice() {
@@ -69,20 +58,12 @@ public class Movie {
 		return bannedCountries;
 	}
 
-	public void setBannedCountries(List<String> bannedCountries) {
-		this.bannedCountries = bannedCountries;
-	}
-
 	public int getAvailableAmount() {
 		return Integer.valueOf(availableAmount);
 	}
 
 	public int getTotalAmount() {
 		return Integer.parseInt(totalAmount);
-	}
-
-	public void setTotalAmount(int totalAmount) {
-		this.totalAmount = Integer.toString(totalAmount);
 	}
 
 	public void incAvailableAmount() {
@@ -95,7 +76,11 @@ public class Movie {
 
 	@Override
 	public String toString() {
-		String countries = String.join("\" \"", bannedCountries);
-		return "\"" + name + "\" " + availableAmount + " " + price + " \"" + countries + "\"";
+		String countries;
+		if (bannedCountries.size() > 0) {
+			countries = String.join("\" \"", bannedCountries);
+			return '"' + name + "\" " + availableAmount + " " + price + " \"" + countries + '"';
+		} else
+			return "\"" + name + "\" " + availableAmount + " " + price;
 	}
 }
