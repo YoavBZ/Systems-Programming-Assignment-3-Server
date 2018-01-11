@@ -4,7 +4,9 @@ import bgu.spl181.net.impl.SharedData;
 import bgu.spl181.net.impl.data.movies.Movie;
 import bgu.spl181.net.impl.data.users.MovieUser;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -38,7 +40,7 @@ public class MovieRentalSharedData extends SharedData {
 	// Users json
 	public void addUser(MovieUser movieUser) {
 		super.addUser(movieUser);
-		saveJson("users", users);
+		saveJson("Users", users);
 	}
 
 	// Movies json
@@ -60,17 +62,19 @@ public class MovieRentalSharedData extends SharedData {
 
 	public void addMovie(Movie movie) {
 		movies.add(movie);
-		saveJson("movies", movies);
+		saveJson("Movies", movies);
 	}
 
 	public void removeMovie(Movie movieToRemove) {
 		movies.remove(movieToRemove);
-		saveJson("movies", movies);
+		saveJson("Movies", movies);
 	}
 
-	public static void saveJson(String file, Object obj) {
-		try (Writer writer = new FileWriter(file + ".json")) {
-			gson.toJson(obj, writer);
+	public static void saveJson(String type, Object obj) {
+		try (Writer writer = new FileWriter("Database" + File.separator + type + ".json")) {
+			JsonObject jsonObject = new JsonObject();
+			jsonObject.add(type.toLowerCase(), gson.toJsonTree(obj));
+			gson.toJson(jsonObject, writer);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

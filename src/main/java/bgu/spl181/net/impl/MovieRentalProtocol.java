@@ -15,9 +15,10 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 
 	@Override
 	protected void processRegistration(List<String> args) {
-		if (!sharedData.hasUser(args.get(1)) &&
-				args.get(3).startsWith("country=") && args.size() == 4) {
-			MovieUser movieUser = new MovieUser(args.get(1), args.get(2), args.get(3).substring(8));
+		if (!sharedData.hasUser(args.get(1)) && args.get(3).startsWith("country=") && args.size() == 4) {
+			String country = args.get(3);
+			country = country.substring(9, country.length() - 1);
+			MovieUser movieUser = new MovieUser(args.get(1), args.get(2), country);
 			((MovieRentalSharedData) sharedData).addUser(movieUser);
 			connections.send(connectionId, ack("registration"));
 		} else
@@ -58,7 +59,7 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 						connections.send(connectionId, ack("info " + ((MovieRentalSharedData) sharedData).getMovieNames()));
 						return;
 					} else {
-						movie = ((MovieRentalSharedData) sharedData).getMovie(args.get(2));
+						movie = ((MovieRentalSharedData) sharedData).getMovie(removeQuotes(args.get(2)));
 						connections.send(connectionId, ack("info " + movie.toString()));
 						return;
 					}
@@ -69,15 +70,16 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 				try {
 					sharedData.getUsersLock().writeLock().lock();
 					((MovieRentalSharedData) sharedData).getMoviesLock().writeLock().lock();
-					movie = ((MovieRentalSharedData) sharedData).getMovie(args.get(2));
-					if (movieUser.getBalance() >= movie.getPrice() && !movieUser.isRented(args.get(2)) && movie.getAvailableAmount() > 0 && !movie.getBannedCountries().contains(movieUser.getCountry())) {
+					String movieName = removeQuotes(args.get(2));
+					movie = ((MovieRentalSharedData) sharedData).getMovie(movieName);
+					if (movieUser.getBalance() >= movie.getPrice() && !movieUser.isRented(movieName) && movie.getAvailableAmount() > 0 && !movie.getBannedCountries().contains(movieUser.getCountry())) {
 						movieUser.rentMovie(movie);
 						movieUser.decBalance(movie.getPrice());
-						MovieRentalSharedData.saveJson("users", sharedData.users);
+						MovieRentalSharedData.saveJson("Users", sharedData.users);
 						movie.decAvailableAmount();
-						MovieRentalSharedData.saveJson("movies", ((MovieRentalSharedData) sharedData).getMovies());
-						connections.send(connectionId, ack("rent " + movie.getQuotedName() + " success"));
-						broadcastToLoggedUsers("movie " + movie.getQuotedName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
+						MovieRentalSharedData.saveJson("Movies", ((MovieRentalSharedData) sharedData).getMovies());
+						connections.send(connectionId, ack("rent " + args.get(2) + " success"));
+						broadcastToLoggedUsers("movie " + args.get(2) + " " + movie.getAvailableAmount() + " " + movie.getPrice());
 						return;
 					}
 				} finally {
@@ -89,14 +91,15 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 				try {
 					sharedData.getUsersLock().writeLock().lock();
 					((MovieRentalSharedData) sharedData).getMoviesLock().writeLock().lock();
-					movie = ((MovieRentalSharedData) sharedData).getMovie(args.get(2));
-					if (movieUser.isRented(args.get(2))) {
+					String movieName = removeQuotes(args.get(2));
+					movie = ((MovieRentalSharedData) sharedData).getMovie(movieName);
+					if (movieUser.isRented(movieName)) {
 						movieUser.returnMovie(movie);
 						MovieRentalSharedData.saveJson("users", sharedData.users);
 						movie.incAvailableAmount();
 						MovieRentalSharedData.saveJson("movies", ((MovieRentalSharedData) sharedData).getMovies());
-						connections.send(connectionId, ack("return " + movie.getQuotedName() + " success"));
-						broadcastToLoggedUsers("movie " + movie.getQuotedName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
+						connections.send(connectionId, ack("return " + args.get(2) + " success"));
+						broadcastToLoggedUsers("movie " + args.get(2) + " " + movie.getAvailableAmount() + " " + movie.getPrice());
 						return;
 					}
 				} finally {
@@ -109,12 +112,13 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 				try {
 					sharedData.getLoggedUsersLock().readLock().lock();
 					((MovieRentalSharedData) sharedData).getMoviesLock().writeLock().lock();
-					if (movieUser.isAdmin() && ((MovieRentalSharedData) sharedData).getMovie(args.get(2)) == null &&
+					String movieName = removeQuotes(args.get(2));
+					if (movieUser.isAdmin() && ((MovieRentalSharedData) sharedData).getMovie(movieName) == null &&
 							Integer.parseInt(args.get(3)) > 0 && Integer.parseInt(args.get(4)) > 0) {
 						String movieId = String.valueOf(((MovieRentalSharedData) sharedData).getMaxMovieId().incrementAndGet());
-						movie = new Movie(movieId, args.get(2), args.get(3), args.get(4), new ArrayList<>());
+						movie = new Movie(movieId, movieName, args.get(3), args.get(4), new ArrayList<>());
 						((MovieRentalSharedData) sharedData).addMovie(movie);
-						connections.send(connectionId, ack("addmovie " + movie.getQuotedName() + " success"));
+						connections.send(connectionId, ack("addmovie " + args.get(2) + " success"));
 						broadcastToLoggedUsers("movie " + movie.getName() + " " + movie.getAvailableAmount() + " " + movie.getPrice());
 						return;
 					}
@@ -128,11 +132,12 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 					sharedData.getLoggedUsersLock().readLock().lock();
 					((MovieRentalSharedData) sharedData).getMoviesLock().writeLock().lock();
 					if (movieUser.isAdmin()) {
-						movie = ((MovieRentalSharedData) sharedData).getMovie(args.get(2));
+						String movieName = args.get(2);
+						movie = ((MovieRentalSharedData) sharedData).getMovie(removeQuotes(movieName));
 						if (movie.getAvailableAmount() == movie.getTotalAmount()) {
 							((MovieRentalSharedData) sharedData).removeMovie(movie);
-							connections.send(connectionId, ack("remmovie " + movie.getQuotedName() + " success"));
-							broadcastToLoggedUsers("movie " + movie.getQuotedName() + " removed");
+							connections.send(connectionId, ack("remmovie " + movieName + " success"));
+							broadcastToLoggedUsers("movie " + movieName + " removed");
 							return;
 						}
 					}
@@ -158,5 +163,11 @@ public class MovieRentalProtocol extends UserServiceProtocol {
 				}
 		}
 		throw new UnsupportedOperationException();
+	}
+
+	private String removeQuotes(String s) {
+		if (s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"')
+			return s.substring(1, s.length() - 1);
+		throw new IllegalArgumentException("Argument doesn't have have quotes");
 	}
 }

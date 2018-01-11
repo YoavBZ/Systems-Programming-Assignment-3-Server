@@ -1,17 +1,15 @@
 {
   "users": [
     {
-      "username": "john",
       "type": "admin",
-      "password": "potato",
       "country": "united states",
       "movies": [],
-      "balance": "0"
+      "balance": "0",
+      "username": "john",
+      "password": "potato"
     },
     {
-      "username": "lisa",
       "type": "normal",
-      "password": "chips123",
       "country": "spain",
       "movies": [
         {
@@ -23,12 +21,12 @@
           "name": "The Notebook"
         }
       ],
-      "balance": "37"
+      "balance": "37",
+      "username": "lisa",
+      "password": "chips123"
     },
     {
-      "username": "shlomi",
       "type": "normal",
-      "password": "cocacola",
       "country": "israel",
       "movies": [
         {
@@ -40,7 +38,22 @@
           "name": "The Pursuit Of Happyness"
         }
       ],
-      "balance": "112"
+      "balance": "112",
+      "username": "shlomi",
+      "password": "cocacola"
+    },
+    {
+      "type": "normal",
+      "country": "israel",
+      "movies": [
+        {
+          "id": "4",
+          "name": "Justice League"
+        }
+      ],
+      "balance": "33",
+      "username": "yoav",
+      "password": "1234"
     }
   ]
 }

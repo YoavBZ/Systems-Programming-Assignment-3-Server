@@ -36,9 +36,10 @@ public class SharedData {
 	public User getUser(String userName) {
 		usersLock.readLock().lock();
 		for (User user : users) {
-			if (userName.equals(user.getUserName()))
+			if (userName.equals(user.getUserName())) {
 				usersLock.readLock().unlock();
-			return user;
+				return user;
+			}
 		}
 		usersLock.readLock().unlock();
 		return null;

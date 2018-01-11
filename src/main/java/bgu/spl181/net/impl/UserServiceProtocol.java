@@ -33,13 +33,8 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 	 */
 	@Override
 	public void process(String msg) {
-		String regex = "(?:\\w+=\"([^\"]*)\")|\"Up([^\"]*)\"|(\\S+)";
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(msg);
-		List<String> args = new ArrayList<>();
-		while (matcher.find()) {
-			args.add(matcher.group());
-		}
+		List<String> args = parseMessage(msg);
+
 		switch (args.get(0)) {
 			case "REGISTER":
 				try {
@@ -87,6 +82,17 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 				}
 		}
 		System.out.println("[" + LocalDateTime.now() + "]: " + msg);
+	}
+
+	private List<String> parseMessage(String msg) {
+		List<String> args = new ArrayList<>();
+		String regex = "\\w+=\"[^\"]*\"|\"[^\"]*\"|\\S+";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(msg);
+		while (matcher.find()) {
+			args.add(matcher.group());
+		}
+		return args;
 	}
 
 	void broadcastToLoggedUsers(String msg) {

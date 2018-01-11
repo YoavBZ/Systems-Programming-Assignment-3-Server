@@ -4,6 +4,7 @@ import bgu.spl181.net.impl.data.movies.Movie;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MovieUser extends User {
@@ -13,7 +14,7 @@ public class MovieUser extends User {
 	@SerializedName("country")
 	private String country;
 	@SerializedName("movies")
-	private List<UserMovie> movies = null;
+	private List<UserMovie> movies = new ArrayList<>();
 	@SerializedName("balance")
 	private String balance;
 

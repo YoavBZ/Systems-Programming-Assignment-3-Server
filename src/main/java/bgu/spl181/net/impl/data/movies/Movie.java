@@ -42,10 +42,6 @@ public class Movie {
 		return name;
 	}
 
-	public String getQuotedName() {
-		return '"' + name + '"';
-	}
-
 	public int getPrice() {
 		return Integer.valueOf(price);
 	}
