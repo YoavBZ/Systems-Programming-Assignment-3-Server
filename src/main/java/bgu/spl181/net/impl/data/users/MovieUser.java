@@ -69,7 +69,7 @@ public class MovieUser extends User {
 		for (UserMovie userMovie : movies) {
 			if (Integer.parseInt(userMovie.id) == movie.getId()) {
 				movies.remove(userMovie);
-				break;
+				return;
 			}
 		}
 	}

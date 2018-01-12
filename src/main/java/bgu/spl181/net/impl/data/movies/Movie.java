@@ -26,11 +26,12 @@ public class Movie {
 	@Expose
 	private String totalAmount;
 
-	public Movie(String id, String name, String price, String availableAmount, List<String> bannedCountries) {
+	public Movie(String id, String name, String price, String totalAmount, List<String> bannedCountries) {
 		this.id = id;
 		this.name = name;
 		this.price = price;
-		this.availableAmount = availableAmount;
+		this.totalAmount = totalAmount;
+		this.availableAmount = totalAmount;
 		this.bannedCountries = bannedCountries;
 	}
 

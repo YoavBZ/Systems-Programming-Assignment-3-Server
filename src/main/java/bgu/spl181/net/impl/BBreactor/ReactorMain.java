@@ -11,6 +11,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -24,12 +25,12 @@ public class ReactorMain {
 			Gson gson = new Gson();
 			JsonParser parser = new JsonParser();
 			// Parsing the Users json
-			JsonObject usersJson = parser.parse(new InputStreamReader(new FileInputStream("Users.json"))).getAsJsonObject();
+			JsonObject usersJson = parser.parse(new InputStreamReader(new FileInputStream("Database" + File.separator + "Users.json"))).getAsJsonObject();
 			for (JsonElement element : usersJson.getAsJsonArray("users")) {
 				users.add(gson.fromJson(element, MovieUser.class));
 			}
 			// Parsing the Movies json
-			JsonObject moviesJson = parser.parse(new InputStreamReader(new FileInputStream("Movies.json"))).getAsJsonObject();
+			JsonObject moviesJson = parser.parse(new InputStreamReader(new FileInputStream("Database" + File.separator + "Movies.json"))).getAsJsonObject();
 			for (JsonElement element : moviesJson.getAsJsonArray("movies")) {
 				movies.add(gson.fromJson(element, Movie.class));
 			}

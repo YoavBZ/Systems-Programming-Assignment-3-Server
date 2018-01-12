@@ -34,15 +34,17 @@ public class SharedData {
 	}
 
 	public User getUser(String userName) {
-		usersLock.readLock().lock();
-		for (User user : users) {
-			if (userName.equals(user.getUserName())) {
-				usersLock.readLock().unlock();
-				return user;
+		try {
+			usersLock.readLock().lock();
+			for (User user : users) {
+				if (userName.equals(user.getUserName())) {
+					return user;
+				}
 			}
+			return null;
+		} finally {
+			usersLock.readLock().unlock();
 		}
-		usersLock.readLock().unlock();
-		return null;
 	}
 
 	public boolean hasUser(String userName) {
@@ -50,18 +52,15 @@ public class SharedData {
 	}
 
 	public String getPassword(String userName) {
-		for (User user : users) {
-			if (userName.equals(user.getUserName()))
-				return user.getPassword();
-		}
-		return null;
+		return getUser(userName).getPassword();
 	}
 
 	public String getLoggedUserName(int connectionId) {
-		loggedUsersLock.readLock().lock();
-		String userName = loggedUsers.get(connectionId);
-		loggedUsersLock.readLock().unlock();
-		return userName;
+		try {
+			loggedUsersLock.readLock().lock();
+			return loggedUsers.get(connectionId);
+		} finally {
+			loggedUsersLock.readLock().unlock();
+		}
 	}
-
 }
