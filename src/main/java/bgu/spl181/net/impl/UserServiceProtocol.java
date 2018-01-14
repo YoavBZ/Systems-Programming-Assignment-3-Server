@@ -3,7 +3,6 @@ package bgu.spl181.net.impl;
 import bgu.spl181.net.api.bidi.BidiMessagingProtocol;
 import bgu.spl181.net.api.bidi.Connections;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -81,7 +80,6 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 					connections.send(connectionId, error("request " + args.get(1)));
 				}
 		}
-		System.out.println("[" + LocalDateTime.now() + "]: " + msg);
 	}
 
 	private List<String> parseMessage(String msg) {

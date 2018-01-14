@@ -1,7 +1,0 @@
-LOGIN john potato
-REQUEST info "Justice League"
-REQUEST info "The Pursuit Of Happyness"
-REQUEST info "The Godfather"
-REQUEST info "The Notebook"
-REQUEST info
-SIGNOUT

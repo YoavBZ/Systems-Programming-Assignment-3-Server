@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class ReactorMain {
 
-	public static void main(String[] args) {
+	public static int main(String[] args) {
 		try {
 			ArrayList<MovieUser> users = new ArrayList<>();
 			ArrayList<Movie> movies = new ArrayList<>();
@@ -42,9 +42,8 @@ public class ReactorMain {
 					() -> new MovieRentalProtocol(data),
 					LineMessageEncoderDecoder::new).serve();
 		} catch (Exception e) {
-//			return 1;
-			e.printStackTrace();
+			return 1;
 		}
-//		return 0;
+		return 0;
 	}
 }
