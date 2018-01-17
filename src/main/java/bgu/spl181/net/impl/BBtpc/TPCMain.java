@@ -42,7 +42,6 @@ public class TPCMain {
 					() -> new MovieRentalProtocol(data),
 					LineMessageEncoderDecoder::new).serve();
 		} catch (Exception e) {
-			e.printStackTrace();
 			return 1;
 		}
 		return 0;
