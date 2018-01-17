@@ -33,6 +33,8 @@ public abstract class UserServiceProtocol implements BidiMessagingProtocol<Strin
 	@Override
 	public void process(String msg) {
 		List<String> args = parseMessage(msg);
+		if (args.isEmpty())
+			return;
 
 		switch (args.get(0)) {
 			case "REGISTER":
