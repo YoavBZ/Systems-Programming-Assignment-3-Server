@@ -1,4 +1,0 @@
-LOGIN lisa potato
-LOGIN lisa chips123
-LOGIN shlomi chips123
-LOGIN shlomi cocacola

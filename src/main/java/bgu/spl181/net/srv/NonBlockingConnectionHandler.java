@@ -77,7 +77,7 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
 	}
 
 	public void continueWrite() {
-		while (!writeQueue.isEmpty()) {
+		while (!writeQueue.isEmpty() && !isClosed()) {
 			try {
 				ByteBuffer top = writeQueue.peek();
 				chan.write(top);

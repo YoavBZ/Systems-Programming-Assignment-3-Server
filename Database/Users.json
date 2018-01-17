@@ -1,17 +1,15 @@
 {
   "users": [
     {
-      "username": "john",
       "type": "admin",
-      "password": "potato",
       "country": "united states",
       "movies": [],
-      "balance": "0"
+      "balance": "0",
+      "username": "john",
+      "password": "potato"
     },
     {
-      "username": "lisa",
       "type": "normal",
-      "password": "chips123",
       "country": "spain",
       "movies": [
         {
@@ -23,12 +21,12 @@
           "name": "The Notebook"
         }
       ],
-      "balance": "37"
+      "balance": "37",
+      "username": "lisa",
+      "password": "chips123"
     },
     {
-      "username": "shlomi",
       "type": "normal",
-      "password": "cocacola",
       "country": "israel",
       "movies": [
         {
@@ -40,8 +38,153 @@
           "name": "The Pursuit Of Happyness"
         }
       ],
-      "balance": "112"
+      "balance": "112",
+      "username": "shlomi",
+      "password": "cocacola"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "465",
+      "username": "Client0",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "540",
+      "username": "Client14",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "465",
+      "username": "Client4",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "440",
+      "username": "Client3",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "465",
+      "username": "Client6",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "440",
+      "username": "Client9",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "390",
+      "username": "Client15",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "440",
+      "username": "Client8",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "515",
+      "username": "Client11",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "365",
+      "username": "Client2",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "540",
+      "username": "Client16",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "490",
+      "username": "Client17",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "440",
+      "username": "Client1",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "490",
+      "username": "Client12",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "515",
+      "username": "Client10",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "490",
+      "username": "Client5",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "490",
+      "username": "Client7",
+      "password": "tryingagain"
+    },
+    {
+      "type": "normal",
+      "country": "Russia",
+      "movies": [],
+      "balance": "440",
+      "username": "Client13",
+      "password": "tryingagain"
     }
   ]
 }
-
